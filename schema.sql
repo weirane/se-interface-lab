@@ -1,0 +1,10 @@
+DROP TABLE IF EXISTS users;
+CREATE TABLE users(
+    username VARCHAR(32) PRIMARY KEY,
+    password VARCHAR(32) NOT NULL
+);
+
+DROP TABLE IF EXISTS tokens;
+CREATE TABLE tokens(
+    uuid CHAR(36) PRIMARY KEY
+);
