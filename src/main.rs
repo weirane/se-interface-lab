@@ -32,7 +32,7 @@ struct Query {
 #[post("/user/signup")]
 async fn signup(pool: web::Data<DbPool>, data: web::Json<Login>) -> Result<String, Errors> {
     eprintln!("{:#?}", data);
-    let conn = pool.get().map_err(|_| Errors::DBConnError)?;
+    let conn = pool.get()?;
 
     // Add user to database
     schema::insert_new_user(&data.username, &data.password, &conn).map_err(|e| {
@@ -50,7 +50,7 @@ async fn signup(pool: web::Data<DbPool>, data: web::Json<Login>) -> Result<Strin
 #[post("/user/signin")]
 async fn signin(pool: web::Data<DbPool>, data: web::Json<Login>) -> Result<String, Errors> {
     eprintln!("{:#?}", data);
-    let conn = pool.get().map_err(|_| Errors::DBConnError)?;
+    let conn = pool.get()?;
 
     // Check if it is a valid user
     let has_user = schema::valid_user(&data.username, &data.password, &conn)?;
@@ -68,7 +68,7 @@ async fn signin(pool: web::Data<DbPool>, data: web::Json<Login>) -> Result<Strin
 #[post("/date")]
 async fn date(pool: web::Data<DbPool>, data: web::Json<Query>) -> Result<String, Errors> {
     eprintln!("{:#?}", data);
-    let conn = pool.get().map_err(|_| Errors::DBConnError)?;
+    let conn = pool.get()?;
 
     // Check token
     if !schema::has_token(&data.token, &conn)? {

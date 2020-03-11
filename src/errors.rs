@@ -4,6 +4,7 @@ use actix_web::{http::StatusCode, HttpResponse};
 use serde_json::json;
 
 #[derive(Debug, thiserror::Error)]
+#[non_exhaustive]
 pub enum Errors {
     #[error("uesr exists")]
     UserExists,
@@ -13,10 +14,10 @@ pub enum Errors {
     InvalidToken,
     #[error("invalid date")]
     InvalidDate,
-    #[error("database error: {0}")]
+    #[error("database error")]
     DBError(#[from] diesel::result::Error),
     #[error("database connection error")]
-    DBConnError,
+    DBConnError(#[from] r2d2::Error),
 }
 
 impl ResponseError for Errors {
@@ -31,7 +32,7 @@ impl ResponseError for Errors {
     fn status_code(&self) -> StatusCode {
         use Errors::*;
         match self {
-            DBError(_) | DBConnError => StatusCode::INTERNAL_SERVER_ERROR,
+            DBError(_) | DBConnError(_) => StatusCode::INTERNAL_SERVER_ERROR,
             _ => StatusCode::OK,
         }
     }
