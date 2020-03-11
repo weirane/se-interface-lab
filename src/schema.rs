@@ -3,7 +3,7 @@ use uuid::Uuid;
 
 use diesel::result::Error as DError;
 
-mod schema {
+mod tables {
     table! {
         users(username) {
             username -> Text,
@@ -18,7 +18,7 @@ mod schema {
     }
 }
 
-use self::schema::{tokens, users};
+use self::tables::{tokens, users};
 
 #[derive(Debug, Clone, serde::Serialize, Queryable, Insertable)]
 pub struct User {

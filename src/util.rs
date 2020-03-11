@@ -6,8 +6,8 @@ pub fn parse_date(date: &str) -> Result<(u32, u32, u32), Errors> {
         .map(|s| Ok(s.parse()?))
         .collect::<Result<_, _>>()
         .map_err(|_: std::num::ParseIntError| Errors::InvalidDate)?;
-    match numbers.as_slice() {
-        &[y, m, d] => Ok((y, m, d)),
+    match *numbers.as_slice() {
+        [y, m, d] => Ok((y, m, d)),
         _ => Err(Errors::InvalidDate),
     }
 }
