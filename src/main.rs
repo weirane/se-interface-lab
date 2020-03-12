@@ -30,7 +30,7 @@ struct Query {
 }
 
 #[post("/user/signup")]
-async fn signup(pool: web::Data<DbPool>, data: web::Json<Login>) -> Result<String, Errors> {
+async fn signup(pool: web::Data<DbPool>, data: web::Form<Login>) -> Result<String, Errors> {
     eprintln!("{:#?}", data);
     let conn = pool.get()?;
 
@@ -48,7 +48,7 @@ async fn signup(pool: web::Data<DbPool>, data: web::Json<Login>) -> Result<Strin
 }
 
 #[post("/user/signin")]
-async fn signin(pool: web::Data<DbPool>, data: web::Json<Login>) -> Result<String, Errors> {
+async fn signin(pool: web::Data<DbPool>, data: web::Form<Login>) -> Result<String, Errors> {
     eprintln!("{:#?}", data);
     let conn = pool.get()?;
 
@@ -66,7 +66,7 @@ async fn signin(pool: web::Data<DbPool>, data: web::Json<Login>) -> Result<Strin
 }
 
 #[post("/date")]
-async fn date(pool: web::Data<DbPool>, data: web::Json<Query>) -> Result<String, Errors> {
+async fn date(pool: web::Data<DbPool>, data: web::Form<Query>) -> Result<String, Errors> {
     eprintln!("{:#?}", data);
     let conn = pool.get()?;
 
