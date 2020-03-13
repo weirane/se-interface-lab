@@ -1,7 +1,7 @@
 DROP TABLE IF EXISTS users;
 CREATE TABLE users(
-    username VARCHAR(32) PRIMARY KEY,
-    password VARCHAR(32) NOT NULL
+    username TEXT PRIMARY KEY,
+    password TEXT NOT NULL
 );
 
 DROP TABLE IF EXISTS tokens;
