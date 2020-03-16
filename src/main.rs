@@ -11,6 +11,7 @@ use actix_web::{post, web, App, HttpServer};
 use diesel::r2d2::{self, ConnectionManager};
 use diesel::result::Error as DError;
 use diesel::SqliteConnection;
+use log::{debug, info};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 use uuid::Uuid;
@@ -31,14 +32,14 @@ struct Query {
 
 #[post("/user/signup")]
 async fn signup(pool: web::Data<DbPool>, data: web::Form<Login>) -> Result<String, Errors> {
-    eprintln!("{:#?}", data);
+    debug!("{:?}", data);
     let conn = pool.get()?;
 
     // Add user to database
     schema::insert_new_user(&data.username, &data.password, &conn).map_err(|e| {
         use diesel::result::DatabaseErrorKind::UniqueViolation;
         if let DError::DatabaseError(UniqueViolation, _) = e {
-            Errors::UserExists
+            Errors::UserExists(data.username.to_string())
         } else {
             e.into()
         }
@@ -49,13 +50,16 @@ async fn signup(pool: web::Data<DbPool>, data: web::Form<Login>) -> Result<Strin
 
 #[post("/user/signin")]
 async fn signin(pool: web::Data<DbPool>, data: web::Form<Login>) -> Result<String, Errors> {
-    eprintln!("{:#?}", data);
+    debug!("{:?}", data);
     let conn = pool.get()?;
 
     // Check if it is a valid user
     let has_user = schema::valid_user(&data.username, &data.password, &conn)?;
     if !has_user {
-        return Err(Errors::InvalidLogin);
+        return Err(Errors::InvalidLogin(
+            data.username.clone(),
+            data.password.clone(),
+        ));
     }
 
     // Generate a token
@@ -67,12 +71,12 @@ async fn signin(pool: web::Data<DbPool>, data: web::Form<Login>) -> Result<Strin
 
 #[post("/date")]
 async fn date(pool: web::Data<DbPool>, data: web::Form<Query>) -> Result<String, Errors> {
-    eprintln!("{:#?}", data);
+    debug!("{:?}", data);
     let conn = pool.get()?;
 
     // Check token
     if !schema::has_token(&data.token, &conn)? {
-        return Err(Errors::InvalidToken);
+        return Err(Errors::InvalidToken(data.token));
     }
 
     // Parse date
@@ -90,13 +94,18 @@ async fn date(pool: web::Data<DbPool>, data: web::Form<Query>) -> Result<String,
 
 #[actix_rt::main]
 async fn main() -> std::io::Result<()> {
+    env_logger::init();
+    debug!("Current directory: {}", std::env::current_dir()?.display());
+
     let connspec = std::env::var("DATABASE_URL").unwrap_or_else(|_| "users.db".to_string());
+    info!("Using database {}", connspec);
     let manager = ConnectionManager::<SqliteConnection>::new(connspec);
     let pool = r2d2::Pool::builder()
         .build(manager)
         .expect("Failed to create pool.");
 
     let bind = "127.0.0.1:8001";
+    info!("Using address {}", bind);
     HttpServer::new(move || {
         App::new()
             .data(web::JsonConfig::default().limit(4096))

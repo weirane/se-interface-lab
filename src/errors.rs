@@ -1,19 +1,20 @@
 use actix_http::ResponseBuilder;
 use actix_web::error::ResponseError;
 use actix_web::{http::StatusCode, HttpResponse};
+use log::{error, info};
 use serde_json::json;
 
 #[derive(Debug, thiserror::Error)]
 #[non_exhaustive]
 pub enum Errors {
-    #[error("uesr exists")]
-    UserExists,
+    #[error("user exists")]
+    UserExists(String),
     #[error("invalid login")]
-    InvalidLogin,
+    InvalidLogin(String, String),
     #[error("invalid token")]
-    InvalidToken,
+    InvalidToken(uuid::Uuid),
     #[error("invalid date")]
-    InvalidDate,
+    InvalidDate(String),
     #[error("database error")]
     DBError(#[from] diesel::result::Error),
     #[error("database connection error")]
@@ -22,11 +23,17 @@ pub enum Errors {
 
 impl ResponseError for Errors {
     fn error_response(&self) -> HttpResponse {
+        let code = self.status_code();
+        if let StatusCode::INTERNAL_SERVER_ERROR = code {
+            error!("{:?}", self);
+        } else {
+            info!("error: {:?}", self);
+        }
         let res = json!({
             "success": false,
             "reason": format!("{}", self),
         });
-        ResponseBuilder::new(self.status_code()).body(res.to_string())
+        ResponseBuilder::new(code).body(res.to_string())
     }
 
     fn status_code(&self) -> StatusCode {
