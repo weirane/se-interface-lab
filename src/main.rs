@@ -7,7 +7,7 @@ mod util;
 
 use errors::Errors;
 
-use actix_web::{post, web, App, HttpServer};
+use actix_web::{middleware, post, web, App, HttpServer};
 use diesel::r2d2::{self, ConnectionManager};
 use diesel::result::Error as DError;
 use diesel::SqliteConnection;
@@ -108,7 +108,8 @@ async fn main() -> std::io::Result<()> {
     info!("Using address {}", bind);
     HttpServer::new(move || {
         App::new()
-            .data(web::JsonConfig::default().limit(4096))
+            .wrap(middleware::Logger::default())
+            .data(web::FormConfig::default().limit(4096))
             .data(pool.clone())
             .service(signup)
             .service(signin)
