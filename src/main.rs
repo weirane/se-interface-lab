@@ -7,7 +7,7 @@ mod util;
 
 use errors::Errors;
 
-use actix_web::{middleware, post, web, App, HttpServer};
+use actix_web::{middleware, post, web, App, HttpResponse, HttpServer};
 use diesel::r2d2::{self, ConnectionManager};
 use diesel::result::Error as DError;
 use diesel::SqliteConnection;
@@ -31,7 +31,7 @@ struct Query {
 }
 
 #[post("/user/signup")]
-async fn signup(pool: web::Data<DbPool>, data: web::Form<Login>) -> Result<String, Errors> {
+async fn signup(pool: web::Data<DbPool>, data: web::Form<Login>) -> Result<HttpResponse, Errors> {
     debug!("{:?}", data);
     let conn = pool.get()?;
 
@@ -45,11 +45,11 @@ async fn signup(pool: web::Data<DbPool>, data: web::Form<Login>) -> Result<Strin
         }
     })?;
     let res = json!({ "success": true });
-    Ok(res.to_string())
+    Ok(HttpResponse::Ok().json(res))
 }
 
 #[post("/user/signin")]
-async fn signin(pool: web::Data<DbPool>, data: web::Form<Login>) -> Result<String, Errors> {
+async fn signin(pool: web::Data<DbPool>, data: web::Form<Login>) -> Result<HttpResponse, Errors> {
     debug!("{:?}", data);
     let conn = pool.get()?;
 
@@ -66,11 +66,11 @@ async fn signin(pool: web::Data<DbPool>, data: web::Form<Login>) -> Result<Strin
     let token = Uuid::new_v4();
     schema::add_token(&token, &conn)?;
     let res = json!({ "success": true, "token": token });
-    Ok(res.to_string())
+    Ok(HttpResponse::Ok().json(res))
 }
 
 #[post("/date")]
-async fn date(pool: web::Data<DbPool>, data: web::Form<Query>) -> Result<String, Errors> {
+async fn date(pool: web::Data<DbPool>, data: web::Form<Query>) -> Result<HttpResponse, Errors> {
     debug!("{:?}", data);
     let conn = pool.get()?;
 
@@ -89,7 +89,7 @@ async fn date(pool: web::Data<DbPool>, data: web::Form<Query>) -> Result<String,
     };
 
     let ret = json!({ "success": true, "info": rslt });
-    Ok(ret.to_string())
+    Ok(HttpResponse::Ok().json(ret))
 }
 
 #[actix_rt::main]

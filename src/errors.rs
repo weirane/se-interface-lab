@@ -33,7 +33,7 @@ impl ResponseError for Errors {
             "success": false,
             "reason": format!("{}", self),
         });
-        ResponseBuilder::new(code).body(res.to_string())
+        ResponseBuilder::new(code).json(res)
     }
 
     fn status_code(&self) -> StatusCode {
