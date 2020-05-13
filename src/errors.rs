@@ -15,6 +15,8 @@ pub enum Errors {
     InvalidToken(uuid::Uuid),
     #[error("invalid date")]
     InvalidDate(String),
+    #[error("bad request")]
+    BadRequest,
     #[error("database error")]
     DBError(#[from] diesel::result::Error),
     #[error("database connection error")]
@@ -40,6 +42,7 @@ impl ResponseError for Errors {
         use Errors::*;
         match self {
             DBError(_) | DBConnError(_) => StatusCode::INTERNAL_SERVER_ERROR,
+            BadRequest => StatusCode::BAD_REQUEST,
             _ => StatusCode::OK,
         }
     }

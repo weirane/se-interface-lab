@@ -12,27 +12,33 @@ use diesel::r2d2::{self, ConnectionManager};
 use diesel::result::Error as DError;
 use diesel::SqliteConnection;
 use log::{debug, info};
-use serde::{Deserialize, Serialize};
 use serde_json::json;
+use std::collections::HashMap;
 use uuid::Uuid;
 
 type DbPool = r2d2::Pool<ConnectionManager<SqliteConnection>>;
+type SMap = HashMap<String, String>;
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug)]
 struct Login {
     username: String,
     password: String,
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug)]
 struct Query {
     date: String,
     token: Uuid,
 }
 
 #[post("/user/signup")]
-async fn signup(pool: web::Data<DbPool>, data: web::Form<Login>) -> Result<HttpResponse, Errors> {
+async fn signup(pool: web::Data<DbPool>, data: web::Form<SMap>) -> Result<HttpResponse, Errors> {
     debug!("{:?}", data);
+    let data = Login {
+        username: data.get("username").ok_or(Errors::BadRequest)?.to_string(),
+        password: data.get("password").ok_or(Errors::BadRequest)?.to_string(),
+    };
+
     let conn = pool.get()?;
 
     // Add user to database
@@ -49,8 +55,13 @@ async fn signup(pool: web::Data<DbPool>, data: web::Form<Login>) -> Result<HttpR
 }
 
 #[post("/user/signin")]
-async fn signin(pool: web::Data<DbPool>, data: web::Form<Login>) -> Result<HttpResponse, Errors> {
+async fn signin(pool: web::Data<DbPool>, data: web::Form<SMap>) -> Result<HttpResponse, Errors> {
     debug!("{:?}", data);
+    let data = Login {
+        username: data.get("username").ok_or(Errors::BadRequest)?.to_string(),
+        password: data.get("password").ok_or(Errors::BadRequest)?.to_string(),
+    };
+
     let conn = pool.get()?;
 
     // Check if it is a valid user
@@ -70,8 +81,17 @@ async fn signin(pool: web::Data<DbPool>, data: web::Form<Login>) -> Result<HttpR
 }
 
 #[post("/date")]
-async fn date(pool: web::Data<DbPool>, data: web::Form<Query>) -> Result<HttpResponse, Errors> {
+async fn date(pool: web::Data<DbPool>, data: web::Form<SMap>) -> Result<HttpResponse, Errors> {
     debug!("{:?}", data);
+
+    let data = Query {
+        date: data.get("date").ok_or(Errors::BadRequest)?.to_string(),
+        token: data
+            .get("token")
+            .and_then(|s| s.parse().ok())
+            .ok_or(Errors::BadRequest)?,
+    };
+
     let conn = pool.get()?;
 
     // Check token
