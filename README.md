@@ -1,5 +1,10 @@
 # interface lab
 
+Three API interfaces built with [actix-web] and [diesel]. 
+
+[actix-web]: https://github.com/actix/actix-web
+[diesel]: https://github.com/diesel-rs/diesel
+
 ## Deploy
 Install Rust:
 
